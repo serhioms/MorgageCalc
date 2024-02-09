@@ -1,2 +1,2 @@
 # MorgageCalc
-Advance morgage calculator
+Advanced morgage calculator
