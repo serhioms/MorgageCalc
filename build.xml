@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<project name="PROSPERICA" default="">
+
+	<tstamp>
+	    <format property="today" pattern="yyyy-MM-dd=hh-mm"/>
+	</tstamp>
+	
+	<property name="filename" value="${today}.zip"/>
+
+	<!--
+				<include name="image/**/*.*"/>
+				<include name="image2/**/*.*"/>
+	-->
+
+	<target name="prosperica.zip">
+		<zip destfile="prosperica=${filename}" compress="true" update="true">
+			<fileset dir="..">
+				<include name="DenJMC_R/src/**/*.java"/>
+				<include name="DenJMC/src/**/*.java"/>
+				<include name="RdFinance/src/**/*.java"/>
+				<include name="RdFinance/build.xml"/>
+				<include name="DenTest/src/**/*.java"/>
+				<include name="DenTest/WebContent/**/*.*"/>
+				<exclude name="DenTest/WebContent/**/.svn"/>
+				<exclude name="DenTest/WebContent/**/*.jar"/>
+		</fileset>
+		</zip>
+	</target>
+
+</project>
