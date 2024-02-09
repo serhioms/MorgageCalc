@@ -9,8 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
-	<!--groupId>ca.mss.redisrest</groupId-->
-	<groupId>com.prosperica</groupId>
+	<groupId>ca.mss.finance</groupId>
 	<artifactId>MorgageCalc</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
