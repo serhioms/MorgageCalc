@@ -1,6 +1,21 @@
 package ca.mss.finance.mc.printers;
 
 
+import ca.mss.finance.excel.ExcelFunctions;
+import ca.mss.finance.mc.AmortizationType;
+import ca.mss.finance.mc.PaymentFrequency;
+import ca.mss.finance.mc.impl.AmortizationTable;
+import ca.mss.finance.mc.impl.Mortgage;
+import ca.mss.finance.mc.impl.MortgageContext;
+import ca.mss.finance.mc.impl.MortgageSettings;
+import ca.mss.finance.util.UtilDateTime;
+import ca.mss.finance.util.UtilMisc;
+import ca.mss.finance.util.UtilString;
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class TextPrinterHelper {
 	
 	final static public String className = TextPrinterHelper.class.getName();
@@ -8,7 +23,7 @@ public class TextPrinterHelper {
 
 	final static public int MORTGAGE_COLUMN_WIDTH = 25;
 	final static public String COLUMN_SPLITTER = "";
-/*
+
 	public static void printInput(PrintStream print, MortgageContext context, String header) {
 		printInput(print, new MortgageContext[]{context}, header);
 	}
@@ -34,41 +49,41 @@ public class TextPrinterHelper {
 		}
 	}
 
-	public static void printAmortization(PrintStream print, MortgageContext context, 
-			MortgageAmortization ma, AmortizationType at) {
+	public static void printAmortization(PrintStream print, MortgageContext context,
+										 AmortizationTable ma, AmortizationType at) {
 		printAmortization(print, context, ma, at, 0, 0);
 	}
 	
-	public static void printAmortization(PrintStream print, MortgageContext context, 
-				MortgageAmortization ma, AmortizationType at, int year, int term) {
+	public static void printAmortization(PrintStream print, MortgageContext context,
+										 AmortizationTable ma, AmortizationType at, int year, int term) {
 
 		System.out.println();
-		System.out.println(at.toString().toUpperCase()+" AMORTIZATION ["+context.getPayment()+" "+context.paymentFrequency+"]"+(context.extraPayment > 0.0? "[extra "+context.extraPayment+"$/"+context.extraFrequency+" "+context.extraOrder.toString().toLowerCase()+"]": "[No Extras]")+":");
+		System.out.println(at.toString().toUpperCase()+" AMORTIZATION ["+context.getPayment(ma.paymentFrequency)+" "+ma.paymentFrequency+"]"+(context.extraPayment.compareTo(ExcelFunctions.ZERO) > 0? "[extra "+context.extraPayment+"$/"+context.extraFrequency+" "+context.extraOrder.toString().toLowerCase()+"]": "[No Extras]")+":");
 		
 		Iterator<String[]> iter = ma.getIteratorStar(at, year, term);
 
 		// Table Header 
-		for(int c=0; c<MortgageAmortization.defTitle.length; c++){
-			System.out.printf("%"+(MortgageAmortization.getColumnWidth()+1)+"s|", 
-						UtilString.alignRight(MortgageAmortization.getColumnTitle(c)+" ", MortgageAmortization.getColumnWidth()));
+		for(int c = 0; c< AmortizationTable.defTitle.length; c++){
+			System.out.printf("%"+(AmortizationTable.getColumnWidth()+1)+"s|",
+						UtilString.alignRight(AmortizationTable.getColumnTitle(c)+" ", AmortizationTable.getColumnWidth()));
 		}
 		System.out.println();
 		
 		// Table Body 
 		while( iter.hasNext() ){
 			String[] row = iter.next();
-			for(int c=0; c<MortgageAmortization.defTitle.length; c++){
-				System.out.printf("%"+MortgageAmortization.getColumnWidth()+"s |", row[c]);
+			for(int c = 0; c< AmortizationTable.defTitle.length; c++){
+				System.out.printf("%"+ AmortizationTable.getColumnWidth()+"s |", row[c]);
 			}
 			System.out.println();
 		}
 	}
 
-	public static void printAmortizationCompareByNOP(PrintStream print, MortgageContext[] mc, 
-			MortgageAmortization[] ma, AmortizationType at, int nop) {
+	public static void printAmortizationCompareByNOP(PrintStream print, MortgageContext[] mc,
+													 AmortizationTable[] ma, AmortizationType at, int nop) {
 
 		System.out.println();
-		System.out.println("AMORTIZATION COMPARE RESULTSS "+printPaymentFrequency(null, mc)+"["+at.title+"][NOP="+nop+"]"+printExtraPayment(null, mc)+printExtraFrequency(null, mc)+printExtraOrder(null, mc));
+		System.out.println("AMORTIZATION COMPARE RESULTSS "+printPaymentFrequency(null, ma)+"["+at.title+"][NOP="+nop+"]"+printExtraPayment(null, mc)+printExtraFrequency(null, mc)+printExtraOrder(null, mc));
 
 		ArrayList<Iterator<String[]>> iterators = getIterators(ma, at, 0, 0);
 
@@ -81,7 +96,7 @@ public class TextPrinterHelper {
 				else
 					return;
 			}
-		}while( val != null && Integer.parseInt(val[MortgageAmortization.C_NOP]) != nop );
+		}while( val != null && Integer.parseInt(val[AmortizationTable.C_NOP]) != nop );
 
 		boolean[] isVisible = new boolean[columns[0].length];
 		for(int j=0, mj=columns[0].length; j<mj; j++){
@@ -112,9 +127,9 @@ public class TextPrinterHelper {
 
 		// Print comparision header 
 		System.out.printf("%"+MORTGAGE_COLUMN_WIDTH+"s |", "Mortgage");
-		for(int j = 0; j < MortgageAmortization.defTitle.length; j++){
+		for(int j = 0; j < AmortizationTable.defTitle.length; j++){
 			if( isVisible[j] && !isDuplicated[j] ){
-				System.out.printf("%" + (MortgageAmortization.getColumnWidth()+1)+"s|", UtilString.alignRight(MortgageAmortization.defTitle[j] + " ", MortgageAmortization.getColumnWidth()));
+				System.out.printf("%" + (AmortizationTable.getColumnWidth()+1)+"s|", UtilString.alignRight(AmortizationTable.defTitle[j] + " ", AmortizationTable.getColumnWidth()));
 			}
 		}
 		System.out.println();
@@ -122,10 +137,10 @@ public class TextPrinterHelper {
 
 		// Print comparision table
 		for(int i=0; i<columns.length; i++ ){
-			System.out.printf("%"+MORTGAGE_COLUMN_WIDTH+"s |", printMortgageLabel(null, mc, i));
+			System.out.printf("%"+MORTGAGE_COLUMN_WIDTH+"s |", printMortgageLabel(null, mc, ma, i));
 			for(int j=0; j<columns[i].length; j++ ){
 				if( isVisible[j] && !isDuplicated[j] ){
-					System.out.printf("%" + MortgageAmortization.getColumnWidth() + "s |", columns[i][j]);
+					System.out.printf("%" + AmortizationTable.getColumnWidth() + "s |", columns[i][j]);
 				}
 			}
 			System.out.println();
@@ -163,10 +178,10 @@ public class TextPrinterHelper {
 		
 	}
 	
-	public static void printAmortizationSummary(PrintStream print, MortgageContext[] mc, 
-			MortgageAmortization[] ma, AmortizationType at, AmortizationSummaryType ast, 
-			int[] clmnSum, int[] wcSum,
-			int parameter, String splitter) {
+	public static void printAmortizationSummary(PrintStream print, MortgageContext[] mc,
+												AmortizationTable[] ma, AmortizationType at, AmortizationSummaryType ast,
+												int[] clmnSum, int[] wcSum,
+												int parameter, String splitter) {
 
 		System.out.println();
 		System.out.println(ast.toString(parameter).toUpperCase());
@@ -196,14 +211,14 @@ public class TextPrinterHelper {
 		// Print comparision header 
 		System.out.printf("%"+(MORTGAGE_COLUMN_WIDTH+mortgageShortLabel(0).length())+"s"+splitter, "Mortgage");
 		for(int j=0; j<clmnSum.length; j++){
-			System.out.printf("%"+wcSum[j]+"s"+splitter, UtilString.alignRight(MortgageAmortization.getColumnTitle(clmnSum[j]), wcSum[j]));
+			System.out.printf("%"+wcSum[j]+"s"+splitter, UtilString.alignRight(AmortizationTable.getColumnTitle(clmnSum[j]), wcSum[j]));
 		}
 		System.out.println();
 		
 
 		// Print comparision table
 		for(int i=0; i<columns.length; i++ ){
-			System.out.printf("%s%"+MORTGAGE_COLUMN_WIDTH+"s"+splitter, mortgageShortLabel(i), printMortgageLabel(null, mc, i));
+			System.out.printf("%s%"+MORTGAGE_COLUMN_WIDTH+"s"+splitter, mortgageShortLabel(i), printMortgageLabel(null, mc, ma, i));
 			for(int j=0; j<clmnSum.length; j++){
 				System.out.printf("%"+wcSum[j]+"s"+splitter, columns[i][clmnSum[j]]);
 			}
@@ -211,16 +226,16 @@ public class TextPrinterHelper {
 		}
 	}	
 	
-	public static void printSummary(PrintStream print, MortgageContext[] mc, MortgageAmortization[] ma){
+	public static void printSummary(PrintStream print, MortgageContext[] mc, AmortizationTable[] ma){
 		print.println();
 		print.println("SUMMARY");
 		for(int i=0; i<mc.length; i++){
-			print.printf("%s", mortgageShortLabel(i)+" "+printMortgageLabel(null, mc, i));
+			print.printf("%s", mortgageShortLabel(i)+" "+printMortgageLabel(null, mc, ma, i));
 			print.println();
 		}
 	}
 	
-	private static ArrayList<Iterator<String[]>> getIterators(MortgageAmortization[] ma, AmortizationType at, int year, int term){
+	private static ArrayList<Iterator<String[]>> getIterators(AmortizationTable[] ma, AmortizationType at, int year, int term){
 		ArrayList<Iterator<String[]>> iterators = new ArrayList<Iterator<String[]>>(ma.length);
 		for(int i=0; i<ma.length; i++ ){
 			iterators.add(i, ma[i].getIteratorStar(at, year, term));
@@ -232,11 +247,11 @@ public class TextPrinterHelper {
 		return "#"+(index+1);
 	}
 	
-	public static void printAmortizationCompareByColumn(PrintStream print, MortgageContext[] mc, 
-			MortgageAmortization[] ma, AmortizationType at,
-			int[] header, int[] wh,  int[] column, int[] wc, 
-			int year, int term,
-			String splitter) {
+	public static void printAmortizationCompareByColumn(PrintStream print, MortgageContext[] mc,
+														AmortizationTable[] ma, AmortizationType at,
+														int[] header, int[] wh, int[] column, int[] wc,
+														int year, int term,
+														String splitter) {
 
 		System.out.println();
 		System.out.println("AMORTIZATION "+at.toString(year, term).toUpperCase());
@@ -261,7 +276,7 @@ public class TextPrinterHelper {
 			for(int i=0; i<ma.length; i++){
 				for(int c=0; c<column.length; c++){
 					System.out.printf("%"+wc[c]+"s"+((i+1)<ma.length? splitter: ""), 
-								UtilString.alignRight(MortgageAmortization.getColumnTitle(column[c])+mortgageShortLabel(i), wc[c]));
+								UtilString.alignRight(AmortizationTable.getColumnTitle(column[c])+mortgageShortLabel(i), wc[c]));
 				}
 			}
 			System.out.println();
@@ -277,7 +292,7 @@ public class TextPrinterHelper {
 			for(int i=0; i<ma.length; i++){
 				for(int c=0; c<column.length; c++){
 					System.out.printf("%"+wc[c]+"s"+((i+1)<ma.length? splitter: ""), 
-								UtilString.alignRight(MortgageAmortization.getColumnTitle(column[c]), wc[c]));
+								UtilString.alignRight(AmortizationTable.getColumnTitle(column[c]), wc[c]));
 				}
 			}
 			System.out.println();
@@ -328,16 +343,16 @@ public class TextPrinterHelper {
 
 	}
 	
-	public static void printCombineCompare(PrintStream print, MortgageContext[] mc, PaymentFrequency paymentFrequency, AmortizationType at, 
-			int[] clmnCmp, int[] wcCmp, 
-			int[] clmnSum, int[] wcSum, 
-			String splitter, int year, int term){
+	public static void printCombineCompare(PrintStream print, MortgageContext[] mc, PaymentFrequency paymentFrequency, AmortizationType at,
+										   int[] clmnCmp, int[] wcCmp,
+										   int[] clmnSum, int[] wcSum,
+										   String splitter, int year, int term){
 		
-		MortgageAmortization[] ma = new MortgageAmortization[mc.length];
+		AmortizationTable[] ma = new AmortizationTable[mc.length];
 		for(int i=0; i<mc.length; i++ ){
 			Mortgage calculator = new Mortgage(new MortgageSettings());
 			calculator.computate(mc[i]);
-			ma[i] = new MortgageAmortization(mc[i], paymentFrequency);
+			ma[i] = new AmortizationTable(mc[i], paymentFrequency);
 		}
 		
 		int[] header = new int[]{};
@@ -348,31 +363,31 @@ public class TextPrinterHelper {
 			break;
 		case BY_PAYMENT:
 			for(int i=1; i<mc.length; i++ ){
-				if( mc[i].paymentFrequency != mc[0].paymentFrequency )
+				if( ma[i].paymentFrequency != ma[0].paymentFrequency )
 					throw new RuntimeException("Can not compare by payments if payment frequency not the same");
 			}
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{3, 6};
 			break;
 		case BY_MONTH:
 			if( year > 0 ){
-				header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_MONTH};
+				header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_MONTH};
 				wh = new int[]{3, 3};
 			} else {
-				header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_MONTH_YEAR};
+				header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_MONTH_YEAR};
 				wh = new int[]{3, 8};
 			}
 			break;
 		case BY_QUOTER:
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_QUOTER};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_QUOTER};
 			wh = new int[]{2, 4};
 			break;
 		case BY_TERM:
-			header = new int[]{MortgageAmortization.C_BALANCE_TERM, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_BALANCE_TERM, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{1, 4};
 			break;
 		case BY_YEAR:
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{2, 4};
 			break;
 		default:
@@ -391,10 +406,11 @@ public class TextPrinterHelper {
 			int[] clmnCmp, int[] wcCmp, 
 			String splitter, int year, int term){
 		
-		MortgageAmortization[] ma = new MortgageAmortization[mc.length];
+		AmortizationTable[] ma = new AmortizationTable[mc.length];
 		for(int i=0; i<mc.length; i++ ){
 			Mortgage calculator = new Mortgage(new MortgageSettings());
-			ma[i] = calculator.computate(mc[i]);
+			calculator.computate(mc[i]);
+			ma[i] = new AmortizationTable(mc[i], PaymentFrequency.MONTHLY);
 		}
 		
 		int[] header = new int[]{};
@@ -405,31 +421,31 @@ public class TextPrinterHelper {
 			break;
 		case BY_PAYMENT:
 			for(int i=1; i<mc.length; i++ ){
-				if( mc[i].paymentFrequency != mc[0].paymentFrequency )
+				if( ma[i].paymentFrequency != ma[0].paymentFrequency )
 					throw new RuntimeException("Can not compare by payments if payment frequency not the same");
 			}
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{3, 6};
 			break;
 		case BY_MONTH:
 			if( year > 0 ){
-				header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_MONTH};
+				header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_MONTH};
 				wh = new int[]{3, 3};
 			} else {
-				header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_MONTH_YEAR};
+				header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_MONTH_YEAR};
 				wh = new int[]{3, 8};
 			}
 			break;
 		case BY_QUOTER:
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_QUOTER};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_QUOTER};
 			wh = new int[]{2, 4};
 			break;
 		case BY_TERM:
-			header = new int[]{MortgageAmortization.C_BALANCE_TERM, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_BALANCE_TERM, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{1, 4};
 			break;
 		case BY_YEAR:
-			header = new int[]{MortgageAmortization.C_NOP, MortgageAmortization.C_BALANCE_OUT_YEAR};
+			header = new int[]{AmortizationTable.C_NOP, AmortizationTable.C_BALANCE_OUT_YEAR};
 			wh = new int[]{2, 4};
 			break;
 		default:
@@ -445,10 +461,11 @@ public class TextPrinterHelper {
 	}
 
 	public static void printCompareByNOP(PrintStream print, MortgageContext[] mc, AmortizationType at, int nop){
-		MortgageAmortization[] ma = new MortgageAmortization[mc.length];
+		AmortizationTable[] ma = new AmortizationTable[mc.length];
 		for(int i=0; i<mc.length; i++ ){
 			Mortgage calculator = new Mortgage(new MortgageSettings());
-			ma[i] = calculator.computate(mc[i]);
+			calculator.computate(mc[i]);
+			ma[i] = new AmortizationTable(mc[i], PaymentFrequency.MONTHLY);
 		}
 		
 		TextPrinterHelper.printInput(print, mc, "MORTGAGE COMPARATOR ["+at+"]");
@@ -457,61 +474,61 @@ public class TextPrinterHelper {
 		
 	}
 	
-	public static String printMortgageLabel(PrintStream print, MortgageContext[] mc, int index){
+	public static String printMortgageLabel(PrintStream print, MortgageContext[] mc, AmortizationTable[] ma, int index){
 		String label = "";
 		
 		MortgageContext[] mcindex = new MortgageContext[]{mc[index]};
 		
-		if( UtilMisc.isEmpty(printPaymentFrequency(null, mc))){
-			label += printPaymentFrequency(null, mcindex); 
+		if( UtilMisc.isEmpty(printPaymentFrequency(null, ma))){
+			label += printPaymentFrequency(null, ma);
 		}
 		
-		label += "$"+mc[index].getPayment(mc[index].paymentFrequency); 
+		label += "$"+mc[index].getPayment(PaymentFrequency.MONTHLY);
 		
 		if( UtilMisc.isEmpty(printPrincipal(null, mc))){
-			label += printPrincipal(null, mcindex); 
+			label += printPrincipal(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printAnnualRate(null, mc))){
-			label += printAnnualRate(null, mcindex); 
+			label += printAnnualRate(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printAmortization(null, mc))){
-			label += printAmortization(null, mcindex); 
+			label += printAmortization(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printStartDate(null, mc))){
-			label += printStartDate(null, mcindex); 
+			label += printStartDate(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printYearTerm(null, mc))){
-			label += printYearTerm(null, mcindex); 
+			label += printYearTerm(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printExtraPayment(null, mc))){
-			label += printExtraPayment(null, mcindex); 
+			label += printExtraPayment(null, mcindex);
 		}
 		
 		if( UtilMisc.isEmpty(printExtraFrequency(null, mc))){
-			label += printExtraFrequency(null, mcindex); 
+			label += printExtraFrequency(null, mcindex);
 		}
 		//
 		if( UtilMisc.isEmpty(printExtraOrder(null, mc))){
-			label += printExtraOrder(null, mcindex); 
+			label += printExtraOrder(null, mcindex);
 		}
 		
 		return label;
 	}
 	
-	public static String printPaymentFrequency(PrintStream print, MortgageContext[] mc){
-		for(int i=0; i<mc.length; i++ ){
-			if( mc[i].paymentFrequency != null && mc[i].paymentFrequency != mc[0].paymentFrequency )
+	public static String printPaymentFrequency(PrintStream print, AmortizationTable[] ma){
+		for(int i=0; i<ma.length; i++ ){
+			if( ma[i].paymentFrequency != null && ma[i].paymentFrequency != ma[0].paymentFrequency )
 				return "";
 		}
 		if( print == null) 
-			return mc[0].paymentFrequency.shortTitle;
+			return ma[0].paymentFrequency.shortTitle;
 		else
-			print.println("       Frequency = "+mc[0].paymentFrequency);
+			print.println("       Frequency = "+ma[0].paymentFrequency);
 		return "";
 	}
 	
@@ -523,7 +540,7 @@ public class TextPrinterHelper {
 		if( print == null) 
 			return "$"+mc[0].principal;
 		else
-			print.println("      Principal = $"+mc[0].principal);
+			print.println("      Principal = $"+mc[0].principal.toPlainString());
 		return "";
 	}
 	
@@ -533,9 +550,9 @@ public class TextPrinterHelper {
 				return "";
 		}
 		if( print == null) 
-			return (mc[0].annualRate*100)+"%";
+			return (mc[0].annualRate.multiply(ExcelFunctions.HUNDRED))+"%";
 		else
-			print.println("  Interest Rate = "+(mc[0].annualRate*100.0)+"%");
+			print.println("  Interest Rate = "+(mc[0].annualRate.multiply(ExcelFunctions.HUNDRED))+"%");
 		return "";
 	}
 	
@@ -559,7 +576,7 @@ public class TextPrinterHelper {
 		if( print == null) 
 			return ""+mc[0].getStartDate();
 		else
-			print.println("     Start Date = "+UtilDateTime.format(mc[0].getStartDate()));
+			print.println("     Start Date = "+ UtilDateTime.format(mc[0].getStartDate()));
 		return "";
 	}
 	
@@ -581,10 +598,11 @@ public class TextPrinterHelper {
 				return "";
 		}
 		if( print == null ){
-			if( mc[0].extraPayment > 0.0 )
+			if( mc[0].extraPayment.compareTo(ExcelFunctions.ZERO) > 0 )
 				return "+$"+mc[0].extraPayment;
-		} else
-			print.println("  Extra Payment = "+mc[0].extraPayment+" $");
+		} else if ( mc[0].extraPayment.compareTo(ExcelFunctions.ZERO) > 0) {
+			print.println("  Extra Payment = " + mc[0].extraPayment + " $");
+		}
 		return "";
 	}
 	
@@ -596,21 +614,23 @@ public class TextPrinterHelper {
 		if( print == null ){
 			if( mc[0].extraFrequency != null )
 				return "/"+mc[0].extraFrequency.ident;
-		} else
-			print.println("Extra Frequency = "+mc[0].extraFrequency);
+		} else if( mc[0].extraFrequency != null) {
+			print.println("Extra Frequency = " + mc[0].extraFrequency);
+		}
 		return "";
 	}
 	
-	public static String printExtraOrder(PrintStream print, MortgageContext[] mc){
-		for(int i=0; i<mc.length; i++ ){
-			if( mc[i].extraOrder != mc[0].extraOrder )
+	public static String printExtraOrder(PrintStream print, MortgageContext[] mc) {
+		for (int i = 0; i < mc.length; i++) {
+			if (mc[i].extraOrder != mc[0].extraOrder)
 				return "";
 		}
-		if( print == null ){
-			if( mc[0].extraOrder != null )
+		if (print == null) {
+			if (mc[0].extraOrder != null)
 				return mc[0].extraOrder.ident;
-		}else
-			print.println("    Extra Order = "+mc[0].extraOrder);
+		} else if ( mc[0].extraOrder != null ){
+			print.println("    Extra Order = " + mc[0].extraOrder);
+		}
 		return "";
 	}
 
@@ -624,28 +644,28 @@ public class TextPrinterHelper {
 	
 	
 	
-	public static void printTable(PrintStream print, MortgageContext context, MortgageAmortization ma,
+	public static void printTable(PrintStream print, MortgageContext context, AmortizationTable ma,
 				AmortizationType at, int[] columns, int term, String year) {
 
 		Iterator<String[]> iter = ma.getIteratorStar(at);
 
 		// Table Header 
 		for(int c=0; c<columns.length; c++){
-			System.out.printf("%"+(MortgageAmortization.getColumnWidth(columns[c])+1)+"s"+COLUMN_SPLITTER, 
-						UtilString.alignRight(MortgageAmortization.getColumnTitle(columns[c])+" ", MortgageAmortization.getColumnWidth(columns[c])));
+			System.out.printf("%"+(AmortizationTable.getColumnWidth(columns[c])+1)+"s"+COLUMN_SPLITTER,
+						UtilString.alignRight(AmortizationTable.getColumnTitle(columns[c])+" ", AmortizationTable.getColumnWidth(columns[c])));
 		}
 		System.out.println();
 		
 		// Table Body 
 		while( iter.hasNext() ){
 			String[] row = iter.next();
-			if( year != null && !year.equals(row[MortgageAmortization.C_BALANCE_OUT_YEAR]) ){
+			if( year != null && !year.equals(row[AmortizationTable.C_BALANCE_OUT_YEAR]) ){
 				continue;
-			} else if( Integer.parseInt(row[MortgageAmortization.C_BALANCE_TERM]) > term ){
+			} else if( Integer.parseInt(row[AmortizationTable.C_BALANCE_TERM]) > term ){
 				continue;
 			}
 			for(int c=0; c<columns.length; c++){
-				System.out.printf("%"+MortgageAmortization.getColumnWidth(columns[c])+"s "+COLUMN_SPLITTER, row[columns[c]]);
+				System.out.printf("%"+ AmortizationTable.getColumnWidth(columns[c])+"s "+COLUMN_SPLITTER, row[columns[c]]);
 			}
 			System.out.println();
 		}
@@ -658,19 +678,19 @@ public class TextPrinterHelper {
 	
 	
 	// TAB: Table, RADIO: Amortization 
-	public static void printTableTabAmortization(PrintStream print, MortgageAmortization ma, MortgageContext context, 
-			String title, int term) {
+	public static void printTableTabAmortization(PrintStream print, AmortizationTable ma, MortgageContext context,
+												 String title, int term) {
 
 		print.println();
 		print.println(title);
 		
 		int[] columns = new int[]{
-				MortgageAmortization.C_NOP,
-				MortgageAmortization.C_BALANCE_OUT_YEAR,
-				MortgageAmortization.C_TOTAL_INTEREST,
-				MortgageAmortization.C_TOTAL_PRINCIPAL,
-				MortgageAmortization.C_TOTAL_FULL_PAYMENT,
-				MortgageAmortization.C_BALANCE_OUT
+				AmortizationTable.C_NOP,
+				AmortizationTable.C_BALANCE_OUT_YEAR,
+				AmortizationTable.C_TOTAL_INTEREST,
+				AmortizationTable.C_TOTAL_PRINCIPAL,
+				AmortizationTable.C_TOTAL_FULL_PAYMENT,
+				AmortizationTable.C_BALANCE_OUT
 		};
 		
 		TextPrinterHelper.printTable(print, context, ma, AmortizationType.BY_YEAR, columns,
@@ -678,64 +698,63 @@ public class TextPrinterHelper {
 	}
 	
 
-	public static void printTableTabQuoter(PrintStream print, MortgageAmortization ma, MortgageContext context, 
-			String title, int term, int year) {
+	public static void printTableTabQuoter(PrintStream print, AmortizationTable ma, MortgageContext context,
+										   String title, int term, int year) {
 
 		print.println();
 		print.println(title);
 		
 		int[] columns = new int[]{
-				MortgageAmortization.C_NOP,
-				MortgageAmortization.C_BALANCE_OUT_QUOTER,
-				MortgageAmortization.C_TOTAL_INTEREST,
-				MortgageAmortization.C_TOTAL_PRINCIPAL,
-				MortgageAmortization.C_TOTAL_FULL_PAYMENT,
-				MortgageAmortization.C_BALANCE_OUT
+				AmortizationTable.C_NOP,
+				AmortizationTable.C_BALANCE_OUT_QUOTER,
+				AmortizationTable.C_TOTAL_INTEREST,
+				AmortizationTable.C_TOTAL_PRINCIPAL,
+				AmortizationTable.C_TOTAL_FULL_PAYMENT,
+				AmortizationTable.C_BALANCE_OUT
 		};
 		
 		TextPrinterHelper.printTable(print, context, ma, AmortizationType.BY_QUOTER, columns, 
 				term, Integer.toString(year));
 	}
 
-	public static void printTableTabMonth(PrintStream print, MortgageAmortization ma, MortgageContext context, 
-			String title, int term, int year) {
+	public static void printTableTabMonth(PrintStream print, AmortizationTable ma, MortgageContext context,
+										  String title, int term, int year) {
 
 		print.println();
 		print.println(title);
 		
 		int[] columns = new int[]{
-				MortgageAmortization.C_NOP,
-				MortgageAmortization.C_BALANCE_OUT_MONTH,
-				MortgageAmortization.C_TOTAL_INTEREST,
-				MortgageAmortization.C_TOTAL_PRINCIPAL,
-				MortgageAmortization.C_TOTAL_FULL_PAYMENT,
-				MortgageAmortization.C_BALANCE_OUT
+				AmortizationTable.C_NOP,
+				AmortizationTable.C_BALANCE_OUT_MONTH,
+				AmortizationTable.C_TOTAL_INTEREST,
+				AmortizationTable.C_TOTAL_PRINCIPAL,
+				AmortizationTable.C_TOTAL_FULL_PAYMENT,
+				AmortizationTable.C_BALANCE_OUT
 		};
 		
 		TextPrinterHelper.printTable(print, context, ma, AmortizationType.BY_MONTH, columns,
 				term, Integer.toString(year));
 	}
 
-	public static void printTableTabPayment(PrintStream print, MortgageAmortization ma, MortgageContext context, 
-			String title, int term, int year) {
+	public static void printTableTabPayment(PrintStream print, AmortizationTable ma, MortgageContext context,
+											String title, int term, int year) {
 
 		print.println();
 		print.println(title);
 		
 		int[] columns = new int[]{
-				MortgageAmortization.C_NOP,
-				MortgageAmortization.C_BALANCE_OUT_MONTH_DAY,
-				MortgageAmortization.C_TOTAL_INTEREST,
-				MortgageAmortization.C_TOTAL_PRINCIPAL,
-				MortgageAmortization.C_TOTAL_FULL_PAYMENT,
-				MortgageAmortization.C_BALANCE_OUT
+				AmortizationTable.C_NOP,
+				AmortizationTable.C_BALANCE_OUT_MONTH_DAY,
+				AmortizationTable.C_TOTAL_INTEREST,
+				AmortizationTable.C_TOTAL_PRINCIPAL,
+				AmortizationTable.C_TOTAL_FULL_PAYMENT,
+				AmortizationTable.C_BALANCE_OUT
 		};
 		
 		TextPrinterHelper.printTable(print, context, ma, AmortizationType.BY_MONTH, columns, 
 				term, Integer.toString(year));
 	}
 
-*/
 }
 
 

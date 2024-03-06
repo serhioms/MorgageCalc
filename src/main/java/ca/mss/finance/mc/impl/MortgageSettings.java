@@ -8,9 +8,10 @@ import ca.mss.finance.mc.MortgageType;
 public class MortgageSettings {
 	final static public String className = MortgageSettings.class.getName();
 	final static public long serialVersionUID = className.hashCode();
-	final static public int SCALE = 2;
-	final static public int SCALE_PRC = 2;
-	final static public MathContext MATH_CONTEXT = new MathContext(SCALE);
+	final static public int PRECISION_CRY = 0;
+	final static public int SCALE_CRY = 2;
+	final static public int SCALE_PRC = 3;
+	final static public MathContext MC_CRY = new MathContext(PRECISION_CRY);
 	private MortgageType compoundType;
 
 	/**

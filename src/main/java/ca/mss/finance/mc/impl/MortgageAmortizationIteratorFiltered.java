@@ -12,7 +12,7 @@ public class MortgageAmortizationIteratorFiltered extends MortgageAmortizationIt
 
 	private MortgageAmortizationRow row;
 
-	public MortgageAmortizationIteratorFiltered(MortgageAmortization amortization, int year, int term) {
+	public MortgageAmortizationIteratorFiltered(AmortizationTable amortization, int year, int term) {
 		super(amortization);
 		this.year = year;
 		this.term = term;

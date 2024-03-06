@@ -15,7 +15,7 @@ public class MortgageAmortizationIteratorByPayment implements Iterator<MortgageA
 	final static public String className = MortgageAmortizationIteratorByPayment.class.getName();
 	final static public long serialVersionUID = className.hashCode();
 
-	final public MortgageAmortization amortization;
+	final public AmortizationTable amortization;
 	final public MortgageContext context;
 
 	protected BigDecimal balance = new BigDecimal("0.0");
@@ -23,7 +23,7 @@ public class MortgageAmortizationIteratorByPayment implements Iterator<MortgageA
 	private int order;
 	private MortgageAmortizationRow row;
 
-	public MortgageAmortizationIteratorByPayment(MortgageAmortization amortization) {
+	public MortgageAmortizationIteratorByPayment(AmortizationTable amortization) {
 		this.amortization = amortization;
 		this.context = amortization.context;
 		this.row = new MortgageAmortizationRow(amortization);
@@ -57,7 +57,7 @@ public class MortgageAmortizationIteratorByPayment implements Iterator<MortgageA
 		row.balanceIn = balance;
 		row.balanceInDate = row.payday;
 
-		row.interest = UtilMath.round(row.balanceIn.multiply(amortization.context.getAmortizationRate(amortization.paymentFrequency)), MortgageSettings.SCALE);
+		row.interest = UtilMath.round(row.balanceIn.multiply(amortization.context.getAmortizationRate(amortization.paymentFrequency)), MortgageSettings.SCALE_CRY);
 		row.principal = amortization.context.getPayment(amortization.paymentFrequency).subtract(row.interest);
 
 		row.balanceOutDate = row.payday;
@@ -73,7 +73,7 @@ public class MortgageAmortizationIteratorByPayment implements Iterator<MortgageA
 			row.payInMo = calculateNumberOfPaymentsInMonth(row.payday, row);
 		}
 		
-		if( row.balanceOut.compareTo(MortgageAmortization.MINIMUM_PAYMENT) <= 0 ){
+		if( row.balanceOut.compareTo(AmortizationTable.MINIMUM_PAYMENT) <= 0 ){
 			row.principal = row.principal.add(row.balanceOut);
 			row.balanceOut = ExcelFunctions.ZERO;
 		}

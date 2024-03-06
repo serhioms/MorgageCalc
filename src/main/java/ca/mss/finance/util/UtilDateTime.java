@@ -38,6 +38,10 @@ public class UtilDateTime {
 		return format(date, DATE_FORMAT_YYYYMMDD);
 	}
 
+	public static final String format(Integer i) {
+		return i.toString();
+	}
+
 	public static final Date getDayStart(Date day, int daysLater, int monthsLater, int yearsLater) {
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(day);

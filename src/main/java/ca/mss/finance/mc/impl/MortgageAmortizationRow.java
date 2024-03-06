@@ -13,37 +13,37 @@ public class MortgageAmortizationRow {
 	final static public String className = MortgageAmortizationRow.class.getName();
 	final static public long serialVersionUID = className.hashCode();
 
-	final public MortgageAmortization amortization;
+	final public AmortizationTable amortization;
 	final public MortgageContext context;
 	
 	public int nop;
 	public Date balanceInDate;
-	public BigDecimal balanceIn = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal interest = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal interestPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal principal = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal principalPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
+	public BigDecimal balanceIn = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal interest = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal interestPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal principal = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal principalPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
 	public Date payday;
-	public BigDecimal payment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal paymentMo = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPayment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPaymentMo = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPaymentYear = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPrcMo = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal extraPrcYear = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal fullPayment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal fullPrincipal = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal fullPrincipalPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalFullPayment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalExtraPayment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalExtraPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalPayment = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalInterest = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalInterestPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalPrincipal = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal totalPrincipalPrc = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
-	public BigDecimal balanceOut = new BigDecimal("0.0", MortgageSettings.MATH_CONTEXT);
+	public BigDecimal payment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal paymentMo = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPayment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPaymentMo = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPaymentYear = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPrcMo = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal extraPrcYear = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal fullPayment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal fullPrincipal = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal fullPrincipalPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalFullPayment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalExtraPayment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalExtraPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalPayment = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalInterest = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalInterestPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalPrincipal = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal totalPrincipalPrc = new BigDecimal("0.0", MortgageSettings.MC_CRY);
+	public BigDecimal balanceOut = new BigDecimal("0.0", MortgageSettings.MC_CRY);
 	public Date balanceOutDate;
 	public int balanceOutYear;
 	public int nextBalanceOutYear; // For hasNext filtering
@@ -59,7 +59,7 @@ public class MortgageAmortizationRow {
 	public Date paydayPrev;
 	public Date paydayNext;
 
-	public MortgageAmortizationRow(MortgageAmortization amortization) {
+	public MortgageAmortizationRow(AmortizationTable amortization) {
 		this.amortization = amortization;
 		this.context = amortization.context;
 	}

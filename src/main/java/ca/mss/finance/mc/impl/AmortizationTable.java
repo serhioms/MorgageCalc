@@ -9,9 +9,9 @@ import ca.mss.finance.mc.AmortizationType;
 import ca.mss.finance.mc.PaymentFrequency;
 
 
-public class MortgageAmortization {
+public class AmortizationTable {
 	
-	final static public String className = MortgageAmortization.class.getName();
+	final static public String className = AmortizationTable.class.getName();
 	final static public long serialVersionUID = className.hashCode();
 
 	final static public int DEFAULT_COLUMN_WIDTH = 11;
@@ -164,11 +164,11 @@ public class MortgageAmortization {
 	final public int termNumberOfPayments, totalNumberOfPayments; 
 	final public MortgageContext context;
 	
-	public MortgageAmortization(MortgageContext context, PaymentFrequency paymentFrequency) {
+	public AmortizationTable(MortgageContext context, PaymentFrequency paymentFrequency) {
 		this.context = context;
 		this.paymentFrequency = paymentFrequency;
 		this.totalNumberOfPayments = context.duration.getPaymentsNo(paymentFrequency);
-		this.termNumberOfPayments = MortgageDuration.getPaymentsNo(context.termYears.intValue(), 0, paymentFrequency);
+		this.termNumberOfPayments = AmortizationPheriod.getPaymentsNo(context.termYears.intValue(), 0, paymentFrequency);
 	}
 
 	final static public int getColumnWidth(int order){
@@ -218,16 +218,16 @@ public class MortgageAmortization {
 	}
 
 	static final public void setVisible(int index, boolean b){
-		MortgageAmortization.isVisible[index] = b;
+		AmortizationTable.isVisible[index] = b;
 	}
 
 	static final public void setColumnNumber(int index, int n){
-		MortgageAmortization.columnNumber[index] = n;
-		MortgageAmortization.isVisible[index] = true;
+		AmortizationTable.columnNumber[index] = n;
+		AmortizationTable.isVisible[index] = true;
 	}
 
 	static final public boolean isVisible(int index){
-		return MortgageAmortization.isVisible[index];
+		return AmortizationTable.isVisible[index];
 	}
 	
 	static final public String columnLabels(int[] column){

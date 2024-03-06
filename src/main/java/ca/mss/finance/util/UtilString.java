@@ -91,6 +91,16 @@ public class UtilString {
 		return newStr;
 	}
 
+	public static String trim(int num, String str) {
+		return str.substring(0, str.length()-1).trim();
+	}
+
+	public static String trim00(int num, String str) {
+		str = trim(num, str);
+		int cnt = str.indexOf('.');
+		cnt = cnt < 0? 0: str.length()-cnt-1;
+		return str+(cnt == 0? "00": cnt == 1? "0": "");
+	}
 }
 
 

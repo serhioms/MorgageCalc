@@ -5,17 +5,13 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.util.Iterator;
 
+import ca.mss.finance.mc.impl.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import ca.mss.finance.mc.AmortizationType;
 import ca.mss.finance.mc.PaymentFrequency;
-import ca.mss.finance.mc.impl.Mortgage;
-import ca.mss.finance.mc.impl.MortgageAmortization;
-import ca.mss.finance.mc.impl.MortgageAmortizationRow;
-import ca.mss.finance.mc.impl.MortgageContext;
-import ca.mss.finance.mc.impl.MortgageDuration;
-import ca.mss.finance.mc.impl.MortgageSettings;
+import ca.mss.finance.mc.impl.AmortizationTable;
 import ca.mss.finance.util.UtilDateTime;
 
 public class TestJPFinanceModule {
@@ -27,8 +23,8 @@ public class TestJPFinanceModule {
 	public void setUp() throws Exception {
 		data = new MortgageContext(
 				new BigDecimal("0.045"), 
-				new BigDecimal("200000.0", MortgageSettings.MATH_CONTEXT), 
-				new MortgageDuration(30, 0), 
+				new BigDecimal("200000.0", MortgageSettings.MC_CRY),
+				new AmortizationPheriod(30, 0),
 				UtilDateTime.parse("10/03/2012", "MM/dd/yyyy"), 
 				new BigDecimal(5));
 
@@ -69,7 +65,7 @@ public class TestJPFinanceModule {
 
 	@Test
 	public void MonthlyAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.MONTHLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.MONTHLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){
@@ -108,7 +104,7 @@ public class TestJPFinanceModule {
 	
 	@Test
 	public void SemiMonthlyAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.SEMI_MONTHLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.SEMI_MONTHLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){
@@ -146,7 +142,7 @@ public class TestJPFinanceModule {
 	
 	@Test
 	public void WeekleAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.WEEKLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.WEEKLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){
@@ -183,7 +179,7 @@ public class TestJPFinanceModule {
 	
 	@Test
 	public void BiWeekleAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.BI_WEEKLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.BI_WEEKLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){
@@ -221,7 +217,7 @@ public class TestJPFinanceModule {
 	
 	@Test
 	public void AcceleratedBiWeekleAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.ACCELERATED_BI_WEEKLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.ACCELERATED_BI_WEEKLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){
@@ -259,7 +255,7 @@ public class TestJPFinanceModule {
 	
 	@Test
 	public void AcceleratedWeekleAmortization() {
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.ACCELERATED_WEEKLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.ACCELERATED_WEEKLY);
 		Iterator<MortgageAmortizationRow> iter = amort.getIterator(AmortizationType.BY_PAYMENT);
 
 		for(int nbr=1; iter.hasNext(); nbr++ ){

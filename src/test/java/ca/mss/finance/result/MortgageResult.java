@@ -1,7 +1,7 @@
 package ca.mss.finance.result;
 
 import ca.mss.finance.mc.impl.Mortgage;
-import ca.mss.finance.mc.impl.MortgageAmortization;
+import ca.mss.finance.mc.impl.AmortizationTable;
 import ca.mss.finance.mc.impl.MortgageContext;
 import ca.mss.finance.mc.impl.MortgageSettings;
 import ca.mss.finance.test.TestMortgagePayment;
@@ -20,7 +20,7 @@ public class MortgageResult extends TestMortgagePayment {
 		Mortgage calculator = new Mortgage(new MortgageSettings());
 		
 		calculator.computate(mc);
-		MortgageAmortization ma = new MortgageAmortization(mc, pfa[mortgageIndex]);
+		AmortizationTable ma = new AmortizationTable(mc, pfa[mortgageIndex]);
 		
 		/*
 		TextPrinterHelper.printTableTabAmortization(System.out, ma, mc, "TAB: Table, RADIO: Year", 1);

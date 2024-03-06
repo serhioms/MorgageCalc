@@ -18,11 +18,11 @@ public class MortgageAmortizationIterator extends MortgageAmortizationIteratorFi
 	private MortgageAmortizationRow row;
 	private MortgageAmortizationRow payrow;
 
-	public MortgageAmortizationIterator(MortgageAmortization amortization, AmortizationType at) {
+	public MortgageAmortizationIterator(AmortizationTable amortization, AmortizationType at) {
 		this(amortization, at, 0, 0);
 	}
 
-	public MortgageAmortizationIterator(MortgageAmortization amortization, AmortizationType at, int year, int term) {
+	public MortgageAmortizationIterator(AmortizationTable amortization, AmortizationType at, int year, int term) {
 		super(amortization, year, term);
 		this.at = at;
 		this.order = 1;

@@ -13,7 +13,7 @@ public class MortgageAmortizationIteratorByPaymentExtra extends MortgageAmortiza
 
 	private MortgageAmortizationRow row;
 	
-	public MortgageAmortizationIteratorByPaymentExtra(MortgageAmortization amortization) {
+	public MortgageAmortizationIteratorByPaymentExtra(AmortizationTable amortization) {
 		super(amortization);
 	}
 
@@ -160,7 +160,7 @@ public class MortgageAmortizationIteratorByPaymentExtra extends MortgageAmortiza
 		/* Goto here */
 		if( ifProcessedExtrasBefore ){
 			// label #1
-			if( row.balanceOut.compareTo(MortgageAmortization.MINIMUM_PAYMENT) <= 0 ){
+			if( row.balanceOut.compareTo(AmortizationTable.MINIMUM_PAYMENT) <= 0 ){
 				row.principal = row.principal.add(row.balanceOut);
 				row.balanceOut = ExcelFunctions.ZERO;
 			}

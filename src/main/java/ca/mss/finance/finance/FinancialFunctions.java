@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 import ca.mss.finance.excel.ExcelFunctions;
 import ca.mss.finance.mc.PaymentFrequency;
-import ca.mss.finance.mc.impl.MortgageDuration;
+import ca.mss.finance.mc.impl.AmortizationPheriod;
 import ca.mss.finance.util.UtilMath;
 
 
@@ -38,7 +38,7 @@ public class FinancialFunctions {
 		return mortgagePaymentMonthly(paymentRate, principal, amortizationYears).divide(monthPayments);
 	}
 
-	final static public BigDecimal mortgagePayment(PaymentFrequency pf, BigDecimal principal, BigDecimal paymentRate, MortgageDuration duration, int scale){
+	final static public BigDecimal mortgagePayment(PaymentFrequency pf, BigDecimal principal, BigDecimal paymentRate, AmortizationPheriod duration, int scale){
 		switch( pf ){
 		case MONTHLY:
 		case SEMI_MONTHLY:

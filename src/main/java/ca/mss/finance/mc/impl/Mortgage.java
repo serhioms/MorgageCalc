@@ -20,7 +20,7 @@ public class Mortgage {
 		for(int i=0; i<context.paymentType.length; i++){
 			context.amortizationRate[i] = FinancialFunctions.mortgagePaymentRate(context.annualRate, settings.getCompoundType().conversionPeriods, context.paymentType[i].paymentsPerYear);
 			context.paymentRate[i] = FinancialFunctions.mortgagePaymentRate(context.annualRate, settings.getCompoundType().conversionPeriods, context.paymentType[i].paymentsPerYearEffective);
-			context.paymentAmount[i] = FinancialFunctions.mortgagePayment(context.paymentType[i], context.principal, context.paymentRate[i], context.duration, MortgageSettings.SCALE);
+			context.paymentAmount[i] = FinancialFunctions.mortgagePayment(context.paymentType[i], context.principal, context.paymentRate[i], context.duration, MortgageSettings.SCALE_CRY);
 		}
 	}
 

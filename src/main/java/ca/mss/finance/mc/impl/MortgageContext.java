@@ -1,21 +1,19 @@
 package ca.mss.finance.mc.impl;
 
-import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.Date;
-
 import ca.mss.finance.excel.ExcelFunctions;
-import ca.mss.finance.util.UtilDateTime;
 import ca.mss.finance.mc.ExtraPaymentFrequency;
 import ca.mss.finance.mc.ExtraPaymentOrder;
 import ca.mss.finance.mc.PaymentFrequency;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 
 public class MortgageContext {
 	final static public String className = MortgageContext.class.getName();
 	final static public long serialVersionUID = className.hashCode();
 	final public BigDecimal principal;
-	final public MortgageDuration duration;
+	final public AmortizationPheriod duration;
 	final public BigDecimal annualRate;
 
 	final public PaymentFrequency[] paymentType;
@@ -35,26 +33,24 @@ public class MortgageContext {
 	Date startDate; 
 	public BigDecimal termYears; 
 	
-	private final NumberFormat numberFormatter;
-
-	public MortgageContext(BigDecimal annualRate, BigDecimal principal, MortgageDuration duration, Date startDate, BigDecimal termYears) {
+	public MortgageContext(BigDecimal annualRate, BigDecimal principal, AmortizationPheriod duration, Date startDate, BigDecimal termYears) {
 		this(annualRate, principal, duration, startDate, termYears, ExcelFunctions.ZERO, null, null, ExcelFunctions.ZERO, ExcelFunctions.ZERO, false);
 	}
 
-	public MortgageContext(BigDecimal annualRate, BigDecimal principal, MortgageDuration duration, Date startDate, BigDecimal termYears, 
-			BigDecimal extraPayment, ExtraPaymentFrequency extraFrequency, ExtraPaymentOrder extraOrder) {
+	public MortgageContext(BigDecimal annualRate, BigDecimal principal, AmortizationPheriod duration, Date startDate, BigDecimal termYears,
+						   BigDecimal extraPayment, ExtraPaymentFrequency extraFrequency, ExtraPaymentOrder extraOrder) {
 		this(annualRate, principal, duration, startDate, termYears,  
 			extraPayment, extraFrequency, extraOrder, 
 			ExcelFunctions.ZERO, ExcelFunctions.ZERO, false);
 	}
 
-	public MortgageContext(BigDecimal annualRate, BigDecimal principal, MortgageDuration duration, Date startDate, BigDecimal termYears, 
-			BigDecimal extraPayment, ExtraPaymentFrequency extraFrequency, ExtraPaymentOrder extraOrder,
-			BigDecimal maxExtraMonth, BigDecimal maxExtraYear, boolean minimizeMoPayments) {
+	public MortgageContext(BigDecimal annualRate, BigDecimal principal, AmortizationPheriod duration, Date startDate, BigDecimal termYears,
+						   BigDecimal extraPayment, ExtraPaymentFrequency extraFrequency, ExtraPaymentOrder extraOrder,
+						   BigDecimal maxExtraMonth, BigDecimal maxExtraYear, boolean minimizeMoPayments) {
 		this.principal = principal;
 		
 		this.duration = duration;
-		this.annualRate = annualRate;
+		this.annualRate = annualRate.compareTo(ExcelFunctions.ONE)<0? annualRate: annualRate.divide(ExcelFunctions.HUNDRED);
 
 		this.paymentType = PaymentFrequency.values();
 		this.paymentAmount = new BigDecimal[paymentType.length];
@@ -70,9 +66,7 @@ public class MortgageContext {
 		this.maxExtraMonth = maxExtraMonth;
 		this.maxExtraYear = maxExtraYear;
 
-		this.minimizeMoPayments = minimizeMoPayments;
-		this.numberFormatter = NumberFormat.getInstance();
-		this.numberFormatter.setMaximumFractionDigits(MortgageSettings.SCALE);
+		this.minimizeMoPayments = minimizeMoPayments;;
 	}
 
 	public final BigDecimal getPayment(int index){
@@ -89,22 +83,6 @@ public class MortgageContext {
 
 	public final BigDecimal getAmortizationRate(PaymentFrequency pt){
 		return amortizationRate[pt.ordinal()];
-	}
-
-	public final String format(String s){
-		return s;
-	}
-	
-	public final String format(int n){
-		return Integer.toString(n);
-	}
-	
-	public final String format(BigDecimal d){
-		return numberFormatter.format(d);
-	}
-	
-	public final String format(Date d){
-		return UtilDateTime.format(d);
 	}
 
 	/**

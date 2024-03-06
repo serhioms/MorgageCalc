@@ -2,11 +2,11 @@ package ca.mss.finance.mc.impl;
 
 import ca.mss.finance.mc.PaymentFrequency;
 
-public class MortgageDuration {
+public class AmortizationPheriod {
 	
 	final public int years, month;
 
-	public MortgageDuration(int years, int month) {
+	public AmortizationPheriod(int years, int month) {
 		this.years = years;
 		this.month = month;
 	}

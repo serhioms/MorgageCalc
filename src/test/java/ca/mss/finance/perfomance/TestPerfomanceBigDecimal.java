@@ -3,16 +3,12 @@ package ca.mss.finance.perfomance;
 import java.math.BigDecimal;
 import java.util.Iterator;
 
+import ca.mss.finance.mc.impl.*;
 import ca.mss.finance.util.UtilDateTime;
 import ca.mss.finance.util.UtilTimer;
 import ca.mss.finance.mc.AmortizationType;
 import ca.mss.finance.mc.PaymentFrequency;
-import ca.mss.finance.mc.impl.Mortgage;
-import ca.mss.finance.mc.impl.MortgageAmortization;
-import ca.mss.finance.mc.impl.MortgageAmortizationRow;
-import ca.mss.finance.mc.impl.MortgageContext;
-import ca.mss.finance.mc.impl.MortgageDuration;
-import ca.mss.finance.mc.impl.MortgageSettings;
+import ca.mss.finance.mc.impl.AmortizationTable;
 
 public class TestPerfomanceBigDecimal {
 
@@ -27,8 +23,8 @@ public class TestPerfomanceBigDecimal {
 		
 		MortgageContext data = new MortgageContext(
 				new BigDecimal("0.045"), 
-				new BigDecimal("200000.0", MortgageSettings.MATH_CONTEXT),
-				new MortgageDuration(30, 0),
+				new BigDecimal("200000.0", MortgageSettings.MC_CRY),
+				new AmortizationPheriod(30, 0),
 				UtilDateTime.parse("10/03/2012", "MM/dd/yyyy"),
 				new BigDecimal(5));
 
@@ -36,7 +32,7 @@ public class TestPerfomanceBigDecimal {
 
 		calc.computate(data);
 
-		MortgageAmortization amort = new MortgageAmortization(data, PaymentFrequency.ACCELERATED_WEEKLY);
+		AmortizationTable amort = new AmortizationTable(data, PaymentFrequency.ACCELERATED_WEEKLY);
 
 		timer.start();
 

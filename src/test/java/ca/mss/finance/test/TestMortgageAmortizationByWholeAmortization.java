@@ -1,7 +1,7 @@
 package ca.mss.finance.test;
 
+import ca.mss.finance.mc.impl.AmortizationTable;
 import ca.mss.finance.mc.impl.Mortgage;
-import ca.mss.finance.mc.impl.MortgageAmortization;
 import ca.mss.finance.mc.impl.MortgageContext;
 import ca.mss.finance.mc.impl.MortgageSettings;
 
@@ -18,7 +18,7 @@ public class TestMortgageAmortizationByWholeAmortization extends TestMortgagePay
 		MortgageContext mc = mca[mortgeIndex];
 		m.computate(mc);
 		
-		MortgageAmortization ma = new MortgageAmortization(mc, pfa[mortgeIndex]);
+		AmortizationTable ma = new AmortizationTable(mc, pfa[mortgeIndex]);
 		
 		/*
 		TextPrinterHelper.printInput(System.out, context, "CANADIAN MORTGAGE CALCULATOR");
