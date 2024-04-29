@@ -15,7 +15,7 @@ import java.util.List;
 
 public class MorgagePlanner {
 
-    static public BigDecimal ANUAL_RATE = new BigDecimal("5.0");
+    static public BigDecimal ANUAL_RATE = new BigDecimal("5.74");
     static public Date START_DATE = UtilDateTime.parse("01/01/2025", "MM/dd/yyyy");
     static public BigDecimal YEAR_TERM = new BigDecimal(3);
 
@@ -26,10 +26,104 @@ public class MorgagePlanner {
         //forecast();
         //realPlan24Feb13();
         //rightPlan24Feb13();
-        table380_850();
+        //table380_850_35();
+        //table380_850_30();
+        //agilePlanner();
+        table550_700_25();
     }
 
-    public static void table380_850(){
+
+    public static void table550_700_25(){
+
+        BigDecimal year3 = new BigDecimal("3.0", MortgageSettings.MC_CRY);
+        BigDecimal hundred = new BigDecimal("100.0", MortgageSettings.MC_CRY);
+
+        BigDecimal returns45 = new BigDecimal("4.50", MortgageSettings.MC_CRY).divide(hundred, MortgageSettings.MC_CRY).multiply(year3);
+        BigDecimal returns50 = new BigDecimal("50.0", MortgageSettings.MC_CRY).divide(hundred, MortgageSettings.MC_CRY).multiply(year3);
+
+        BigDecimal maxInvestment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
+        BigDecimal minPaymentMo = new BigDecimal("2500.00", MortgageSettings.MC_CRY);
+        BigDecimal maxPaymentMo = new BigDecimal("3000.00", MortgageSettings.MC_CRY);
+        BigDecimal coupleThousand = new BigDecimal("1000.00", MortgageSettings.MC_CRY);
+        int amortization = 30;
+        List<Result> resultList = new ArrayList<>(100);
+        BigDecimal minDownPrc = new BigDecimal("20.0", MortgageSettings.MC_CRY).divide(hundred, MortgageSettings.MC_CRY);
+
+        int N = (700000-550000)/10000+1;
+        BigDecimal[] housePrices = new BigDecimal[N];
+        for(int i=0, maxi=housePrices.length; i<maxi; ++i) {
+            BigDecimal housePrice = new BigDecimal(550000+i*10000, MortgageSettings.MC_CRY);
+            BigDecimal downpayment = housePrice.multiply(minDownPrc);
+            BigDecimal mortgage = housePrice.subtract(downpayment);
+            MorgagePlanner.Result result = calculate(housePrice, mortgage, new AmortizationPheriod(amortization, 0));
+
+            if( result.monthlyPayment.compareTo(minPaymentMo) <= 0 ){
+                resultList.add(result);
+                continue; // 20% down, less then 25000 mo!!! Skip any other mortgages
+            }
+
+            // Find better mortgage with more to down
+            boolean is3K = false;
+            while( result.monthlyPayment.compareTo(minPaymentMo) > 0){
+                downpayment = downpayment.add(coupleThousand);
+                mortgage = housePrice.subtract(downpayment);
+                if( downpayment.compareTo(maxInvestment) > 0 ){ // no more for down
+                    break;
+                }
+                if(  !is3K && result.monthlyPayment.compareTo(maxPaymentMo) <= 0 ){ // Found mortgage under 3000
+                    resultList.add(result);
+                    is3K = true;
+                }
+                result = calculate(housePrice, mortgage, new AmortizationPheriod(amortization, 0));
+            }
+            resultList.add(result); // is less than 2500 or wthe best from worst with 0 invest
+        }
+
+        //String fmt = "%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n";
+        String fmt = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"; // 20
+
+        System.out.printf(fmt, "Years",
+                "House", "Down,20%", "Invest","Returns 4.5%", "Returns 50%",
+                "Mortgage", "Pay, mo",
+                "Term, 3y", "Balance, 3y", "Principal, 3y", "Intrest, 3y", "Savings", "Pay, 3y",
+                "Term, 10y", "Balance, 10y", "Principal, 10y", "Intrest, 10y", "Pay, 10y",
+                "Pay, ttl", "Intrest, ttl");
+        for(Result row: resultList ){
+
+            BigDecimal toInvest = maxInvestment.subtract(row.houseprice.subtract(row.morgage));
+            BigDecimal toDown = row.houseprice.subtract(row.morgage);
+
+            BigDecimal toSavings = toInvest.subtract(row.termPayment).add(row.termPrincipal).add(toInvest.multiply(returns45));
+
+            System.out.printf(fmt,
+                    UtilFormat.format(row.term),
+
+                    UtilFormat.format(row.houseprice),
+                    UtilFormat.format(toDown),
+                    UtilFormat.format(toInvest),
+
+                    // Returns
+                    UtilFormat.format(toInvest.multiply(returns45)),
+                    UtilFormat.format(toInvest.multiply(returns50)),
+
+                    UtilFormat.format(row.startBalance),
+                    UtilFormat.format(row.monthlyPayment),
+
+                    UtilDateTime.format(row.termDate),
+                    UtilFormat.format(row.termBalance), UtilFormat.format(row.termPrincipal),
+                    UtilFormat.format(row.termIntrest), UtilFormat.format(toSavings), UtilFormat.format(row.termPayment),
+
+                    UtilDateTime.format(row.termDate10),
+                    UtilFormat.format(row.termBalance10), UtilFormat.format(row.termPrincipal10),
+                    UtilFormat.format(row.termIntrest10), UtilFormat.format(row.termPayment10),
+
+                    UtilFormat.format(row.endPayment), UtilFormat.format(row.endIntrest));
+        }
+
+    }
+
+
+    public static void agilePlanner(){
 
         BigDecimal maxInvestment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
 
@@ -52,13 +146,13 @@ public class MorgagePlanner {
         boolean[] isPrinted = new boolean[housePrices.length];
 
         List<Result> result = new ArrayList<>(100);
-        BigDecimal minDownPrc = new BigDecimal("5.0", MortgageSettings.MC_CRY).divide(new BigDecimal("100.0"), MortgageSettings.MC_CRY);
+        BigDecimal minDownPrc = new BigDecimal("20.0", MortgageSettings.MC_CRY).divide(new BigDecimal("100.0"), MortgageSettings.MC_CRY);
 
         for(int i=0,maxi=housePrices.length; i<maxi; ++i){
             downpayment[i] = housePrices[i].multiply(minDownPrc);
             mortgage[i] = housePrices[i].subtract(downpayment[i]);
             for(int n=0,maxn=amortization.length; n<maxn; ++n){
-                result.add(calculate(mortgage[i], new AmortizationPheriod(amortization[n], 0)));
+                result.add(calculate(housePrices[i], mortgage[i], new AmortizationPheriod(amortization[n], 0)));
             }
         }
 
@@ -114,7 +208,233 @@ public class MorgagePlanner {
                     }
                     downpayment[index] = downpayment[index].add(coupleThousand);
                     mortgage[index] = housePrices[index].subtract(downpayment[index]);
-                    row = calculate(mortgage[index], new AmortizationPheriod(row.term, 0));
+                    row = calculate(housePrices[index], mortgage[index],  new AmortizationPheriod(row.term, 0));
+                    System.out.printf(fmt,
+                            UtilFormat.format(row.term),
+
+                            UtilFormat.format(housePrices[index]),
+                            UtilFormat.format(downpayment[index]),
+                            UtilFormat.format(maxInvestment.subtract(downpayment[index])),
+
+                            UtilFormat.format(row.startBalance),
+                            UtilFormat.format(row.monthlyPayment),
+
+                            UtilDateTime.format(row.termDate),
+                            UtilFormat.format(row.termBalance), UtilFormat.format(row.termPrincipal),
+                            UtilFormat.format(row.termIntrest), UtilFormat.format(row.termPayment),
+
+                            UtilDateTime.format(row.termDate10),
+                            UtilFormat.format(row.termBalance10), UtilFormat.format(row.termPrincipal10),
+                            UtilFormat.format(row.termIntrest10), UtilFormat.format(row.termPayment10),
+
+                            UtilDateTime.format(row.endYear),
+                            UtilDateTime.format(row.endYear - 1971),
+                            UtilFormat.format(row.endPayment), UtilFormat.format(row.endIntrest));
+                }
+            }
+        }
+
+    }
+
+    public static void table380_850_30(){
+
+        BigDecimal maxInvestment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
+
+        BigDecimal maxPaymentMo = new BigDecimal("3000.00", MortgageSettings.MC_CRY);
+        BigDecimal midPaymentMo = new BigDecimal("2500.00", MortgageSettings.MC_CRY);
+        BigDecimal minPaymentMo = new BigDecimal("2300.00", MortgageSettings.MC_CRY);
+
+        BigDecimal coupleThousand = new BigDecimal("20000.00", MortgageSettings.MC_CRY);
+
+        int N = (850000-380000)/10000+1;
+        BigDecimal[] housePrices = new BigDecimal[N];
+        for(int i=0, maxi=housePrices.length; i<maxi; ++i) {
+            housePrices[i] = new BigDecimal(380000+i*10000, MortgageSettings.MC_CRY);
+        }
+
+        int[] amortization = new int[]{30,25,20};
+
+        BigDecimal[] downpayment = new BigDecimal[housePrices.length];
+        BigDecimal[] mortgage = new BigDecimal[housePrices.length];
+        boolean[] isPrinted = new boolean[housePrices.length];
+
+        List<Result> result = new ArrayList<>(100);
+        BigDecimal minDownPrc = new BigDecimal("20.0", MortgageSettings.MC_CRY).divide(new BigDecimal("100.0"), MortgageSettings.MC_CRY);
+
+        for(int i=0,maxi=housePrices.length; i<maxi; ++i){
+            downpayment[i] = housePrices[i].multiply(minDownPrc);
+            mortgage[i] = housePrices[i].subtract(downpayment[i]);
+            for(int n=0,maxn=amortization.length; n<maxn; ++n){
+                result.add(calculate(housePrices[i], mortgage[i], new AmortizationPheriod(amortization[n], 0)));
+            }
+        }
+
+        //String fmt = "%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n";
+        String fmt = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"; // 20
+
+        System.out.printf(fmt, "Years",
+                "House", "Down,5%", "Invest",
+                "Morgage", "Pay, mo",
+                "Term, 3y", "Balance, 3y", "Principal, 3y", "Intrest, 3y", "Pay, 3y",
+                "Term, 10y", "Balance, 10y", "Principal, 10y", "Intrest, 10y", "Pay, 10y",
+                "End", "Age",
+                "Pay, ttl", "Intrest, ttl");
+        for(int i=0; i<result.size(); ++i){
+            int index = i / amortization.length;
+            if( isPrinted[index] ){
+                continue;
+            }
+            Result row = result.get(i);
+/*
+            if( row.monthlyPayment.compareTo(minPaymentMo) <= 0 ){
+                continue;
+            }
+*/
+            if( !isPrinted[index] ) {
+                isPrinted[index] = true;
+                System.out.printf(fmt,
+                        UtilFormat.format(row.term),
+
+                        UtilFormat.format(housePrices[index]),
+                        UtilFormat.format(downpayment[index]),
+                        UtilFormat.format(maxInvestment.subtract(downpayment[index])),
+
+                        UtilFormat.format(row.startBalance),
+                        UtilFormat.format(row.monthlyPayment),
+
+                        UtilDateTime.format(row.termDate),
+                        UtilFormat.format(row.termBalance), UtilFormat.format(row.termPrincipal),
+                        UtilFormat.format(row.termIntrest), UtilFormat.format(row.termPayment),
+
+                        UtilDateTime.format(row.termDate10),
+                        UtilFormat.format(row.termBalance10), UtilFormat.format(row.termPrincipal10),
+                        UtilFormat.format(row.termIntrest10), UtilFormat.format(row.termPayment10),
+
+                        UtilDateTime.format(row.endYear),
+                        UtilDateTime.format(row.endYear - 1971),
+                        UtilFormat.format(row.endPayment), UtilFormat.format(row.endIntrest));
+            }
+            if( row.monthlyPayment.compareTo(maxPaymentMo) > 0 ) {
+                for (int v=0; row.monthlyPayment.compareTo(midPaymentMo) > 0 && v<2; ++v ) {
+                    if (downpayment[index].add(coupleThousand).compareTo(maxInvestment) > 0) {
+                        break;
+                    }
+                    downpayment[index] = downpayment[index].add(coupleThousand);
+                    mortgage[index] = housePrices[index].subtract(downpayment[index]);
+                    row = calculate(housePrices[index], mortgage[index],  new AmortizationPheriod(row.term, 0));
+                    System.out.printf(fmt,
+                            UtilFormat.format(row.term),
+
+                            UtilFormat.format(housePrices[index]),
+                            UtilFormat.format(downpayment[index]),
+                            UtilFormat.format(maxInvestment.subtract(downpayment[index])),
+
+                            UtilFormat.format(row.startBalance),
+                            UtilFormat.format(row.monthlyPayment),
+
+                            UtilDateTime.format(row.termDate),
+                            UtilFormat.format(row.termBalance), UtilFormat.format(row.termPrincipal),
+                            UtilFormat.format(row.termIntrest), UtilFormat.format(row.termPayment),
+
+                            UtilDateTime.format(row.termDate10),
+                            UtilFormat.format(row.termBalance10), UtilFormat.format(row.termPrincipal10),
+                            UtilFormat.format(row.termIntrest10), UtilFormat.format(row.termPayment10),
+
+                            UtilDateTime.format(row.endYear),
+                            UtilDateTime.format(row.endYear - 1971),
+                            UtilFormat.format(row.endPayment), UtilFormat.format(row.endIntrest));
+                }
+            }
+        }
+
+    }
+
+    public static void table380_850_35(){
+
+        BigDecimal maxInvestment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
+
+        BigDecimal maxPaymentMo = new BigDecimal("3000.00", MortgageSettings.MC_CRY);
+        BigDecimal midPaymentMo = new BigDecimal("2500.00", MortgageSettings.MC_CRY);
+        BigDecimal minPaymentMo = new BigDecimal("2300.00", MortgageSettings.MC_CRY);
+
+        BigDecimal coupleThousand = new BigDecimal("20000.00", MortgageSettings.MC_CRY);
+
+        int N = (850000-380000)/10000+1;
+        BigDecimal[] housePrices = new BigDecimal[N];
+        for(int i=0, maxi=housePrices.length; i<maxi; ++i) {
+            housePrices[i] = new BigDecimal(380000+i*10000, MortgageSettings.MC_CRY);
+        }
+
+        int[] amortization = new int[]{30,25,20};
+
+        BigDecimal[] downpayment = new BigDecimal[housePrices.length];
+        BigDecimal[] mortgage = new BigDecimal[housePrices.length];
+        boolean[] isPrinted = new boolean[housePrices.length];
+
+        List<Result> result = new ArrayList<>(100);
+        BigDecimal minDownPrc = new BigDecimal("5.0", MortgageSettings.MC_CRY).divide(new BigDecimal("100.0"), MortgageSettings.MC_CRY);
+
+        for(int i=0,maxi=housePrices.length; i<maxi; ++i){
+            downpayment[i] = housePrices[i].multiply(minDownPrc);
+            mortgage[i] = housePrices[i].subtract(downpayment[i]);
+            for(int n=0,maxn=amortization.length; n<maxn; ++n){
+                result.add(calculate(housePrices[i], mortgage[i], new AmortizationPheriod(amortization[n], 0)));
+            }
+        }
+
+        //String fmt = "%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n";
+        String fmt = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n"; // 20
+
+        System.out.printf(fmt, "Years",
+                "House", "Down,5%", "Invest",
+                "Morgage", "Pay, mo",
+                "Term, 3y", "Balance, 3y", "Principal, 3y", "Intrest, 3y", "Pay, 3y",
+                "Term, 10y", "Balance, 10y", "Principal, 10y", "Intrest, 10y", "Pay, 10y",
+                "End", "Age",
+                "Pay, ttl", "Intrest, ttl");
+        for(int i=0; i<result.size(); ++i){
+            int index = i / amortization.length;
+            if( isPrinted[index] ){
+                continue;
+            }
+            Result row = result.get(i);
+/*
+            if( row.monthlyPayment.compareTo(minPaymentMo) <= 0 ){
+                continue;
+            }
+*/
+            if( !isPrinted[index] ) {
+                isPrinted[index] = true;
+                System.out.printf(fmt,
+                        UtilFormat.format(row.term),
+
+                        UtilFormat.format(housePrices[index]),
+                        UtilFormat.format(downpayment[index]),
+                        UtilFormat.format(maxInvestment.subtract(downpayment[index])),
+
+                        UtilFormat.format(row.startBalance),
+                        UtilFormat.format(row.monthlyPayment),
+
+                        UtilDateTime.format(row.termDate),
+                        UtilFormat.format(row.termBalance), UtilFormat.format(row.termPrincipal),
+                        UtilFormat.format(row.termIntrest), UtilFormat.format(row.termPayment),
+
+                        UtilDateTime.format(row.termDate10),
+                        UtilFormat.format(row.termBalance10), UtilFormat.format(row.termPrincipal10),
+                        UtilFormat.format(row.termIntrest10), UtilFormat.format(row.termPayment10),
+
+                        UtilDateTime.format(row.endYear),
+                        UtilDateTime.format(row.endYear - 1971),
+                        UtilFormat.format(row.endPayment), UtilFormat.format(row.endIntrest));
+            }
+            if( row.monthlyPayment.compareTo(maxPaymentMo) > 0 ) {
+                for (int v=0; row.monthlyPayment.compareTo(midPaymentMo) > 0 && v<2; ++v ) {
+                    if (downpayment[index].add(coupleThousand).compareTo(maxInvestment) > 0) {
+                        break;
+                    }
+                    downpayment[index] = downpayment[index].add(coupleThousand);
+                    mortgage[index] = housePrices[index].subtract(downpayment[index]);
+                    row = calculate(housePrices[index], mortgage[index],  new AmortizationPheriod(row.term, 0));
                     System.out.printf(fmt,
                             UtilFormat.format(row.term),
 
@@ -174,7 +494,7 @@ public class MorgagePlanner {
             downpayment[i] = housePrices[i].multiply(minDownPrc);
             mortgage[i] = housePrices[i].subtract(downpayment[i]);
             for(int n=0,maxn=amortization.length; n<maxn; ++n){
-                result.add(calculate(mortgage[i], new AmortizationPheriod(amortization[n], 0)));
+                result.add(calculate(housePrices[i], mortgage[i], new AmortizationPheriod(amortization[n], 0)));
             }
         }
 
@@ -228,7 +548,7 @@ public class MorgagePlanner {
                     }
                     downpayment[index] = downpayment[index].add(coupleThousand);
                     mortgage[index] = housePrices[index].subtract(downpayment[index]);
-                    row = calculate(mortgage[index], new AmortizationPheriod(row.term, 0));
+                    row = calculate(housePrices[index], mortgage[index],  new AmortizationPheriod(row.term, 0));
                     System.out.printf(fmt,
                             UtilFormat.format(row.term),
 
@@ -261,16 +581,16 @@ public class MorgagePlanner {
         BigDecimal investment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
 
         Result[] result = new Result[]{
-                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
-                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
-                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
-                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
-                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
-                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
-                calculate(new BigDecimal("553000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
-                calculate(new BigDecimal("553000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
-                calculate(new BigDecimal("592000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
-                calculate(new BigDecimal("632000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
+                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
+                calculate(new BigDecimal("474000.0", MortgageSettings.MC_CRY), new BigDecimal("474000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
+                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
+                calculate(new BigDecimal("525000.0", MortgageSettings.MC_CRY), new BigDecimal("525000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("553000.0", MortgageSettings.MC_CRY), new BigDecimal("553000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(30, 0)),
+                calculate(new BigDecimal("553000.0", MortgageSettings.MC_CRY), new BigDecimal("553000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("592000.0", MortgageSettings.MC_CRY), new BigDecimal("592000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("632000.0", MortgageSettings.MC_CRY), new BigDecimal("632000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
         };
 
         //String fmt = "%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n";
@@ -336,11 +656,11 @@ public class MorgagePlanner {
         BigDecimal investment = new BigDecimal("230000.00", MortgageSettings.MC_CRY);
 
         Result[] result = new Result[]{
-                calculate(new BigDecimal("230000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(10, 0)),
-                calculate(new BigDecimal("310000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(15, 0)),
-                calculate(new BigDecimal("420000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
-                calculate(new BigDecimal("490000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
-                calculate(new BigDecimal("590000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("230000.0", MortgageSettings.MC_CRY), new BigDecimal("230000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(10, 0)),
+                calculate(new BigDecimal("310000.0", MortgageSettings.MC_CRY), new BigDecimal("310000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(15, 0)),
+                calculate(new BigDecimal("420000.0", MortgageSettings.MC_CRY), new BigDecimal("420000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(25, 0)),
+                calculate(new BigDecimal("490000.0", MortgageSettings.MC_CRY), new BigDecimal("490000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
+                calculate(new BigDecimal("590000.0", MortgageSettings.MC_CRY), new BigDecimal("590000.0", MortgageSettings.MC_CRY), new AmortizationPheriod(35, 0)),
          };
 
         //String fmt = "%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s%15s\n";
@@ -401,9 +721,9 @@ public class MorgagePlanner {
 
     }
 
-    public static Result calculate(BigDecimal principal, AmortizationPheriod amortization){
+    public static Result calculate(BigDecimal houseprice, BigDecimal morgage, AmortizationPheriod amortization){
         Mortgage mortgage = new Mortgage(new MortgageSettings());
-        MortgageContext mortgageContext = new MortgageContext(ANUAL_RATE, principal, amortization, START_DATE, YEAR_TERM);
+        MortgageContext mortgageContext = new MortgageContext(ANUAL_RATE, morgage, amortization, START_DATE, YEAR_TERM);
         mortgage.computate(mortgageContext);
 
         AmortizationTable amortizationTable = new AmortizationTable(mortgageContext, PaymentFrequency.MONTHLY);
@@ -415,7 +735,7 @@ public class MorgagePlanner {
         Iterator<MortgageAmortizationRow> iter = amortizationTable.getIterator(AmortizationType.BY_MONTH, 0, 0);
 
         MortgageAmortizationRow row = null;
-        Result result = new Result();
+        Result result = new Result(houseprice, morgage);
 
         while( iter.hasNext() ){
             if( row == null ){
@@ -454,6 +774,16 @@ public class MorgagePlanner {
         public BigDecimal termPayment10;
         public Integer term;
         public Integer endYear;
+        public BigDecimal houseprice;
+        public BigDecimal morgage;
+
+        public Result(BigDecimal houseprice, BigDecimal morgage){
+            this.houseprice = houseprice;
+            this.morgage = morgage;
+        }
+
+        public Result(){
+        }
 
         public void populateBegin(MortgageAmortizationRow row) {
             startDate = new Date(row.balanceInDate.getTime());
