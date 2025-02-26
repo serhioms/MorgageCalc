@@ -1,6 +1,7 @@
 package ca.mss.finance.mc.impl;
 
 import java.math.MathContext;
+import java.math.RoundingMode;
 
 import ca.mss.finance.mc.MortgageType;
 
@@ -11,7 +12,7 @@ public class MortgageSettings {
 	final static public int PRECISION_CRY = 0;
 	final static public int SCALE_CRY = 2;
 	final static public int SCALE_PRC = 3;
-	final static public MathContext MC_CRY = new MathContext(PRECISION_CRY);
+	final static public MathContext MC_CRY = new MathContext(PRECISION_CRY, RoundingMode.HALF_UP);
 	private MortgageType compoundType;
 
 	/**
